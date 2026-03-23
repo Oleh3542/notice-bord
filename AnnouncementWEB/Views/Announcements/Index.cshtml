@@ -1,0 +1,177 @@
+﻿@model IEnumerable<AnnouncementWEB.Models.AnnouncementViewModel>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h2 class="fw-bold text-dark">Всі оголошення</h2>
+        <a asp-controller="Announcements" asp-action="Create" class="btn btn-success px-4 shadow-sm">
+            <i class="bi bi-plus-lg"></i> Створити нове
+        </a>
+    </div>
+
+    <div class="card shadow-sm mb-4 bg-light border-0">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Категорія</label>
+                    <select id="filterCategory" class="form-select form-select-sm" onchange="updateSubFilter()">
+                        <option value="">Всі категорії</option>
+                        <option value="Побутова техніка">Побутова техніка</option>
+                        <option value="Комп'ютерна техніка">Комп'ютерна техніка</option>
+                        <option value="Смартфони">Смартфони</option>
+                        <option value="Інше">Інше</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Підкатегорія</label>
+                    <select id="filterSubCategory" class="form-select form-select-sm" onchange="filterTable()" disabled>
+                        <option value="">Всі підкатегорії</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Статус</label>
+                    <select id="filterStatus" class="form-select form-select-sm" onchange="filterTable()">
+                        <option value="">Всі статуси</option>
+                        <option value="Активне">Активне</option>
+                        <option value="Архів">Архів</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilters()">
+                        <i class="bi bi-arrow-counterclockwise"></i> Скинути все
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0" id="announcementsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Заголовок</th>
+                        <th>Дата публікації</th> <th>Опис</th>
+                        <th>Категорія / Підкатегорія</th>
+                        <th class="text-center">Статус</th>
+                        <th class="text-end pe-4">Дії</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                            <tr class="announcement-row"
+                                data-category="@item.Category"
+                                data-subcategory="@item.SubCategory"
+                                data-status="@(item.Status ? "Активне" : "Архів")">
+
+                                <td class="ps-4 fw-semibold text-primary">@item.Title</td>
+
+                                <td class="text-muted small">
+                                @(item.CreatedDate.HasValue ? item.CreatedDate.Value.ToString("dd.MM.yyyy HH:mm") : "---")
+                                </td>
+
+                                <td>
+                                    <div class="text-muted small text-truncate" style="max-width: 200px;" title="@item.Description">
+                                    @item.Description
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">@item.Category</span><br />
+                                    <small class="text-secondary">@item.SubCategory</small>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge rounded-pill @(item.Status ? "bg-success" : "bg-warning text-dark")">
+                                    @(item.Status ? "Активне" : "Архів")
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group shadow-sm bg-white rounded">
+                                    @if (User.Identity.IsAuthenticated)
+                                    {
+                                        <a asp-controller="Announcements" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Ви впевнені?')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                    }
+                                    else
+                                    {
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showAuthAlert()">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showAuthAlert()">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                    }
+                                    </div>
+                                </td>
+                            </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+        <script>
+            const subData = {
+                "Побутова техніка": ["Холодильники", "Пральні машини", "Бойлери", "Печі", "Витяжки", "Мікрохвильові печі"],
+                "Комп'ютерна техніка": ["ПК", "Ноутбуки", "Монітори", "Принтери", "Сканери"],
+                "Смартфони": ["Android смартфони", "iOS/Apple смартфони"],
+                "Інше": ["Одяг", "Взуття", "Аксесуари", "Спортивне обладнання", "Іграшки"]
+            };
+
+            function updateSubFilter() {
+                const catVal = document.getElementById("filterCategory").value;
+                const subSelect = document.getElementById("filterSubCategory");
+                subSelect.innerHTML = '<option value="">Всі підкатегорії</option>';
+
+                if (catVal && subData[catVal]) {
+                    subSelect.disabled = false;
+                    subData[catVal].forEach(sub => {
+                        let opt = document.createElement("option");
+                        opt.value = sub;
+                        opt.text = sub;
+                        subSelect.appendChild(opt);
+                    });
+                } else {
+                    subSelect.disabled = true;
+                }
+                filterTable();
+            }
+
+            function filterTable() {
+                const catF = document.getElementById("filterCategory").value.toLowerCase();
+                const subF = document.getElementById("filterSubCategory").value.toLowerCase();
+                const statF = document.getElementById("filterStatus").value.toLowerCase();
+                const rows = document.querySelectorAll(".announcement-row");
+
+                rows.forEach(row => {
+                    const rCat = (row.getAttribute("data-category") || "").toLowerCase();
+                    const rSub = (row.getAttribute("data-subcategory") || "").toLowerCase();
+                    const rStat = (row.getAttribute("data-status") || "").toLowerCase();
+
+                    const matchCat = catF === "" || rCat === catF;
+                    const matchSub = subF === "" || rSub === subF;
+                    const matchStat = statF === "" || rStat === statF;
+
+                    row.style.display = (matchCat && matchSub && matchStat) ? "" : "none";
+                });
+            }
+
+            function resetFilters() {
+                document.getElementById("filterCategory").value = "";
+                document.getElementById("filterStatus").value = "";
+                updateSubFilter();
+            }
+
+            function showAuthAlert() {
+                alert("Будь ласка, спочатку зареєструйтесь або увійдіть через Google, щоб редагувати чи видаляти оголошення.");
+            }
+        </script>
+}

@@ -1,0 +1,116 @@
+﻿@model AnnouncementWEB.Models.AnnouncementViewModel
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Редагувати оголошення</h2>
+        <span class="badge bg-info text-dark">ID: @Model.Id</span>
+    </div>
+    <hr />
+
+    <form asp-action="Edit">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <input type="hidden" asp-for="CreatedDate" />
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 bg-light p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Заголовок</label>
+                        <input asp-for="Title" class="form-control" placeholder="Введіть заголовок" required />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Опис</label>
+                        <textarea asp-for="Description" class="form-control" rows="5" placeholder="Детально опишіть товар чи послугу" required></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Категорія</label>
+                            <select id="Category" asp-for="Category" class="form-select" onchange="updateSubCategories()" required>
+                                <option value="">-- Оберіть категорію --</option>
+                                <option value="Побутова техніка">Побутова техніка</option>
+                                <option value="Комп'ютерна техніка">Комп'ютерна техніка</option>
+                                <option value="Смартфони">Смартфони</option>
+                                <option value="Інше">Інше</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Підкатегорія</label>
+                            <select id="SubCategory" asp-for="SubCategory" class="form-select" required>
+                                <option value="">-- Спочатку оберіть категорію --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 form-check form-switch">
+                        <input asp-for="Status" class="form-check-input" type="checkbox" role="switch" id="statusSwitch" />
+                        <label class="form-check-label fw-bold" for="statusSwitch">Активне оголошення</label>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-save"></i> Зберегти зміни
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary px-4">Назад до списку</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="alert alert-info border-0 shadow-sm">
+                    <h5><i class="bi bi-info-circle"></i> Підказка</h5>
+                    <p class="small mb-0">При редагуванні оголошення дата публікації (@(Model.CreatedDate?.ToString("dd.MM.yyyy") ?? "не вказана")) залишиться незмінною.</p>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const subCategories = {
+            "Побутова техніка": ["Холодильники", "Пральні машини", "Бойлери", "Печі", "Витяжки", "Мікрохвильові печі"],
+            "Комп'ютерна техніка": ["ПК", "Ноутбуки", "Монітори", "Принтери", "Сканери"],
+            "Смартфони": ["Android смартфони", "iOS/Apple смартфони"],
+            "Інше": ["Одяг", "Взуття", "Аксесуари", "Спортивне обладнання", "Іграшки"]
+        };
+
+
+        const currentSub = "@Html.Raw(Model.SubCategory)";
+
+        function updateSubCategories() {
+            const catSelect = document.getElementById("Category");
+            const subCatSelect = document.getElementById("SubCategory");
+            const selectedCat = catSelect.value;
+
+            subCatSelect.innerHTML = '<option value="">-- Оберіть підкатегорію --</option>';
+
+            if (subCategories[selectedCat]) {
+                subCatSelect.disabled = false;
+                subCategories[selectedCat].forEach(sub => {
+                    const option = document.createElement("option");
+                    option.value = sub;
+                    option.text = sub;
+
+                    if (sub === currentSub) {
+                        option.selected = true;
+                    }
+
+                    subCatSelect.appendChild(option);
+                });
+            } else {
+                subCatSelect.disabled = true;
+            }
+        }
+
+       
+        document.addEventListener("DOMContentLoaded", updateSubCategories);
+    </script>
+}

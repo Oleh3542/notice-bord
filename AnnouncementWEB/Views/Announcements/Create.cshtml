@@ -1,0 +1,80 @@
+﻿@model AnnouncementWEB.Models.AnnouncementViewModel
+
+<div class="container mt-4">
+    <h2>Створити нове оголошення</h2>
+    <hr />
+    <form asp-action="Create">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Заголовок</label>
+                    <input asp-for="Title" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Опис</label>
+                    <textarea asp-for="Description" class="form-control" rows="4" required></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Категорія</label>
+                    <select id="Category" asp-for="Category" class="form-select" onchange="updateSubCategories()" required>
+                        <option value="">-- Оберіть категорію --</option>
+                        <option value="Побутова техніка">Побутова техніка</option>
+                        <option value="Комп'ютерна техніка">Комп'ютерна техніка</option>
+                        <option value="Смартфони">Смартфони</option>
+                        <option value="Інше">Інше</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Підкатегорія</label>
+                    <select id="SubCategory" asp-for="SubCategory" class="form-select" required disabled>
+                        <option value="">-- Спочатку оберіть категорію --</option>
+                    </select>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input asp-for="Status" class="form-check-input" type="checkbox" checked />
+                    <label class="form-check-label">Активне</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Зберегти</button>
+                <a asp-action="Index" class="btn btn-secondary">Назад до списку</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        const subCategories = {
+            "Побутова техніка": ["Холодильники", "Пральні машини", "Бойлери", "Печі", "Витяжки", "Мікрохвильові печі"],
+            "Комп'ютерна техніка": ["ПК", "Ноутбуки", "Монітори", "Принтери", "Сканери"],
+            "Смартфони": ["Android смартфони", "iOS/Apple смартфони"],
+            "Інше": ["Одяг", "Взуття", "Аксесуари", "Спортивне обладнання", "Іграшки"]
+        };
+
+        function updateSubCategories() {
+            const catSelect = document.getElementById("Category");
+            const subCatSelect = document.getElementById("SubCategory");
+            const selectedCat = catSelect.value;
+
+           
+            subCatSelect.innerHTML = '<option value="">-- Оберіть підкатегорію --</option>';
+
+            if (selectedCat && subCategories[selectedCat]) {
+                subCatSelect.disabled = false; 
+                subCategories[selectedCat].forEach(sub => {
+                    const option = document.createElement("option");
+                    option.value = sub;
+                    option.text = sub;
+                    subCatSelect.appendChild(option);
+                });
+            } else {
+                subCatSelect.disabled = true; 
+                subCatSelect.innerHTML = '<option value="">-- Спочатку оберіть категорію --</option>';
+            }
+        }
+    </script>
+}
