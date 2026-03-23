@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,9 +26,9 @@ builder.Services.AddAuthentication(options =>
 .AddCookie()
 .AddGoogle(googleOptions =>
 {
-    googleOptions.ClientId = "130134358293-uhch1gqj0qgoat8jp57sjvi25aife639.apps.googleusercontent.com";
-    googleOptions.ClientSecret = "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";
-   
+ //   options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+ //   options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+
     googleOptions.CorrelationCookie.SameSite = SameSiteMode.Unspecified;
 });
 
